@@ -47,7 +47,41 @@ const transactions = [
 ];
 
 function rapportMensuel(transactions) {
-  // TODO
+  const moisData = {};
+
+  transactions.forEach(t => {
+    const mois = t.date.slice(0, 7);
+
+    if (!moisData[mois]) {
+      moisData[mois] = {
+        mois: mois,
+        nombreTransactions: 0,
+        totalHT: 0,
+        transactionMax: 0
+      };
+    }
+
+    moisData[mois].nombreTransactions++;
+    moisData[mois].totalHT += t.montant;
+
+    if (t.montant > moisData[mois].transactionMax) {
+      moisData[mois].transactionMax = t.montant;
+    }
+  });
+
+  const result = Object.values(moisData).map(m => {
+    const totalTVA = m.totalHT*0.20;
+    const totalTTC = m.totalHT + totalTVA;
+
+    return {
+      ...m, //brings old array data (moisData) to new arr (result) 
+      totalTVA,
+      totalTTC
+    };
+  });
+
+  // sort by month
+  return result.sort((a, b) => a.mois.localeCompare(b.mois));
 }
 
 function top3Clients(transactions) {
@@ -77,7 +111,24 @@ function top3Clients(transactions) {
 }
 
 function evolutionMensuelle(transactions) {
-  // TODO
+  const rapport = rapportMensuel(transactions);
+
+  const result = [];
+
+  for (let i = 1; i < rapport.length; i++) {
+    const prev = rapport[i - 1].totalHT;
+    const curr = rapport[i].totalHT;
+
+    const evolution = ((curr - prev) / prev) * 100;
+
+    result.push({
+      mois: rapport[i].mois,
+      totalHT: curr,
+      evolution:evolution.toFixed(1)
+    });
+  }
+
+  return result;
 }
 
 function detecterAnomalies(transactions) {
